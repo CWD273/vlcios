@@ -47,16 +47,26 @@
 </div>
 
 <script>
-function triggerOTA() {
-    // Dynamically resolves manifest.plist relative to where this HTML file is hosted
+async function triggerOTA() {
     var currentFolder = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
     var manifestUrl = currentFolder + "/manifest.plist";
     
-    // Formats the protocol string required by iOS Safari
-    var otaScheme = "itms-services://?action=download-manifest&url=" + encodeURIComponent(manifestUrl);
-    
-    // Redirects browser window to trigger the prompt
-    window.location.href = otaScheme;
+    try {
+        // Step 1: Pre-verify that the web server can actually serve the plist file
+        let response = await fetch(manifestUrl, { method: 'HEAD' });
+        
+        if (!response.ok) {
+            alert("Error: The manifest.plist file could not be reached on the server.");
+            return;
+        }
+        
+        // Step 2: If the file exists, safely trigger the Apple installer
+        var otaScheme = "itms-services://?action=download-manifest&url=" + encodeURIComponent(manifestUrl);
+        window.location.href = otaScheme;
+
+    } catch (error) {
+        alert("Network Error: Could not connect to the server to verify installation files.");
+    }
 }
 </script>
 
